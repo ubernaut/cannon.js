@@ -18,7 +18,7 @@
     <script>
 
       var demo = new CANNON.Demo();
-      var nx=4, ny=4, nz=15, w=10, h=5, mass=0.01;
+      var nx=30, ny=1, nz=40, w=40, h=.2, mass=0.01;
       var walls = true;
 
 
@@ -29,7 +29,7 @@
         var world = demo.getWorld();
         var sph = new CANNON.SPHSystem();
         sph.density = 1;
-        sph.viscosity = 0.03;
+        sph.viscosity = 0.01;
         sph.smoothingRadius = 1.0;
         world.subsystems.push(sph);
 
@@ -38,15 +38,15 @@
         world.defaultContactMaterial.contactEquationRelaxation = 2; // Stabilization time in number of timesteps
 
         // Max solver iterations: Use more for better force propagation, but keep in mind that it's not very computationally cheap!
-        world.solver.iterations = 10;
+        world.solver.iterations = 2;
 
-        world.gravity.set(0,0,-10);
+        world.gravity.set(0,0,0);
 
         // Materials
         var material = new CANNON.Material();
         var material_material = new CANNON.ContactMaterial(material, material, {
-            friction: 0.06,
-            restitution: 0.0
+            friction: .01,
+            restitution: 0
         });
         world.addContactMaterial(material_material);
 
@@ -96,6 +96,15 @@
             planeYmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI/2);
             planeYmax.position.set(0,h*0.5,0);
             world.addBody(planeYmax);
+
+            var planeMaterial = new THREE.MeshPhongMaterial( { color:0xff0000, transparent:true, opacity:1 } );
+            var planeShapeZmax = new CANNON.Plane();
+            var planeZmax = new CANNON.Body({ mass: 0, material: material });
+            planeZmax.addShape(planeShapeZmax);
+            planeZmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI);
+            planeZmax.position.set(0,0,40);
+            //planeZmax.material.
+            world.addBody(planeZmax);
         }
 
         // Create particles
@@ -110,7 +119,7 @@
               particle.addShape(new CANNON.Particle());
               particle.position.set((i + (Math.random()-0.5)*rand + 0.5)*w/nx - w*0.5,
                                     (j + (Math.random()-0.5)*rand + 0.5)*h/ny - h*0.5,
-                                    k*h/ny);
+                                    k);
               world.addBody(particle);
               sph.add(particle);
               demo.addVisual(particle);
