@@ -18,15 +18,17 @@
     <script>
 
       var demo = new CANNON.Demo();
-      var nx=30, ny=1, nz=40, w=40, h=.2, mass=0.01;
+      var nx=50, ny=1, nz=20, w=60, h=.2, mass=0.01;
       var walls = true;
-
+      var sphereBody;
+      var world;
+      var allparts=[];
 
       // Test scalability - add scenes for different number of particles
       demo.addScene((nx*ny*nz)+ " particles", function(){
 
         // Create world
-        var world = demo.getWorld();
+        world = demo.getWorld();
         var sph = new CANNON.SPHSystem();
         sph.density = 1;
         sph.viscosity = 0.01;
@@ -38,14 +40,14 @@
         world.defaultContactMaterial.contactEquationRelaxation = 2; // Stabilization time in number of timesteps
 
         // Max solver iterations: Use more for better force propagation, but keep in mind that it's not very computationally cheap!
-        world.solver.iterations = 2;
+        world.solver.iterations = 10;
 
         world.gravity.set(0,0,0);
 
         // Materials
         var material = new CANNON.Material();
         var material_material = new CANNON.ContactMaterial(material, material, {
-            friction: .01,
+            friction: .001,
             restitution: 0
         });
         world.addContactMaterial(material_material);
@@ -97,15 +99,34 @@
             planeYmax.position.set(0,h*0.5,0);
             world.addBody(planeYmax);
 
-            var planeMaterial = new THREE.MeshPhongMaterial( { color:0xff0000, transparent:true, opacity:1 } );
+
             var planeShapeZmax = new CANNON.Plane();
             var planeZmax = new CANNON.Body({ mass: 0, material: material });
             planeZmax.addShape(planeShapeZmax);
             planeZmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI);
-            planeZmax.position.set(0,0,40);
+            planeZmax.position.set(0,0,20);
             //planeZmax.material.
             world.addBody(planeZmax);
         }
+
+        var radius = .5; // m
+        var planeMaterial = new THREE.MeshPhongMaterial( { color:0xff0000, transparent:true, opacity:1 } );
+        sphereBody = new CANNON.Body({
+           mass: 5, // kg
+           position: new CANNON.Vec3(0,10,0), // m
+           //shape: new CANNON.Sphere(1),
+           shape: new CANNON.Cylinder(radius,radius,5,20),
+           material: material
+        });
+        sphereBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), Math.PI/4)
+
+        //sphereBody.angularVelocity.y=1
+        world.addBody(sphereBody);
+        demo.addVisual(sphereBody);
+        sph.add(sphereBody);
+        // sphereBody.angularVelocity.z = 0
+        // sphereBody.velocity.z = 50
+        // sphereBody.velocity.x = 50
 
         // Create particles
         var rand = 0.1;
@@ -120,15 +141,59 @@
               particle.position.set((i + (Math.random()-0.5)*rand + 0.5)*w/nx - w*0.5,
                                     (j + (Math.random()-0.5)*rand + 0.5)*h/ny - h*0.5,
                                     k);
+              particle.velocity.x=-15;
+              particle.initYpos=particle.position.y;
+
               world.addBody(particle);
               sph.add(particle);
               demo.addVisual(particle);
+              allparts.push(particle)
             }
           }
         }
       });
 
       demo.start();
+      var fixedTimeStep = 1.0 / 60.0; // seconds
+      var maxSubSteps = 3;
+      var lastTime;
+      (function simloop(time){
+        sphereBody.position.x =0
+        sphereBody.position.y =0
+        sphereBody.position.z = 10
+        sphereBody.velocity.x =0
+        sphereBody.velocity.y =0
+        sphereBody.velocity.z = 0
+        sphereBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), -Math.PI/4)
+        //sphereBody.angularVelocity.y=5
+
+
+        requestAnimationFrame(simloop);
+        if(lastTime !== undefined){
+           var dt = (time - lastTime) / 1000;
+           world.step(fixedTimeStep, dt, maxSubSteps);
+        }
+        for(part of allparts){
+          if(part.position.x <= -(w/2 ) ){
+            //console.log("got one");
+            part.position.x = w/2 -1;
+            part.position.y = part.initYpos;
+            part.velocity.x = -15
+            part.velocity.y = 0
+            part.velocity.z = 0
+          }
+          if(part.position.x >=  w/2 ){
+            part.position.y = part.initYpos;
+            part.position.x = w/2 ;
+            part.velocity.x = -15
+            part.velocity.y = 0
+            part.velocity.z = 0
+          }
+        }
+        //console.log("Sphere z position: " + sphereBody.position.z);
+        lastTime = time;
+      })();
+
 
     </script>
   </body>
