@@ -18,7 +18,7 @@
     <script>
 
       var demo = new CANNON.Demo();
-      var nx=50, ny=1, nz=20, w=60, h=.2, mass=0.01;
+      var nx=20, ny=5, nz=10, w=40, h=5, mass=0.01;
       var walls = true;
       var sphereBody;
       var world;
@@ -31,7 +31,7 @@
         world = demo.getWorld();
         var sph = new CANNON.SPHSystem();
         sph.density = 1;
-        sph.viscosity = 0.01;
+        sph.viscosity = 0.013;
         sph.smoothingRadius = 1.0;
         world.subsystems.push(sph);
 
@@ -104,7 +104,7 @@
             var planeZmax = new CANNON.Body({ mass: 0, material: material });
             planeZmax.addShape(planeShapeZmax);
             planeZmax.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI);
-            planeZmax.position.set(0,0,20);
+            planeZmax.position.set(0,0,10);
             //planeZmax.material.
             world.addBody(planeZmax);
         }
@@ -112,18 +112,18 @@
         var radius = .5; // m
         var planeMaterial = new THREE.MeshPhongMaterial( { color:0xff0000, transparent:true, opacity:1 } );
         sphereBody = new CANNON.Body({
-           mass: 5, // kg
+           mass: 5000, // kg
            position: new CANNON.Vec3(0,10,0), // m
            //shape: new CANNON.Sphere(1),
-           shape: new CANNON.Cylinder(radius,radius,5,20),
+           shape: new CANNON.Cylinder(3,.01,10,20),
            material: material
         });
-        sphereBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), Math.PI/4)
+        //sphereBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), Math.PI)
 
         //sphereBody.angularVelocity.y=1
         world.addBody(sphereBody);
         demo.addVisual(sphereBody);
-        sph.add(sphereBody);
+        //sph.add(sphereBody);
         // sphereBody.angularVelocity.z = 0
         // sphereBody.velocity.z = 50
         // sphereBody.velocity.x = 50
@@ -160,11 +160,11 @@
       (function simloop(time){
         sphereBody.position.x =0
         sphereBody.position.y =0
-        sphereBody.position.z = 10
+        sphereBody.position.z = 5
         sphereBody.velocity.x =0
         sphereBody.velocity.y =0
         sphereBody.velocity.z = 0
-        sphereBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), -Math.PI/4)
+        sphereBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), -Math.PI/2)
         //sphereBody.angularVelocity.y=5
 
 
