@@ -18,11 +18,12 @@
     <script>
 
       var demo = new CANNON.Demo();
-      var nx=20, ny=5, nz=10, w=40, h=5, mass=0.01;
+      var nx=20, ny=5, nz=10, w=35, h=5, mass=0.01;
       var walls = true;
       var sphereBody;
       var world;
       var allparts=[];
+      var speed =-15
 
       // Test scalability - add scenes for different number of particles
       demo.addScene((nx*ny*nz)+ " particles", function(){
@@ -31,7 +32,7 @@
         world = demo.getWorld();
         var sph = new CANNON.SPHSystem();
         sph.density = 1;
-        sph.viscosity = 0.013;
+        sph.viscosity = 0.005;
         sph.smoothingRadius = 1.0;
         world.subsystems.push(sph);
 
@@ -42,7 +43,7 @@
         // Max solver iterations: Use more for better force propagation, but keep in mind that it's not very computationally cheap!
         world.solver.iterations = 10;
 
-        world.gravity.set(0,0,0);
+        world.gravity.set(0,0,-1);
 
         // Materials
         var material = new CANNON.Material();
@@ -115,7 +116,7 @@
            mass: 5000, // kg
            position: new CANNON.Vec3(0,10,0), // m
            //shape: new CANNON.Sphere(1),
-           shape: new CANNON.Cylinder(3,.01,10,20),
+           shape: new CANNON.Cylinder(3,.01,10,60),
            material: material
         });
         //sphereBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), Math.PI)
@@ -123,7 +124,7 @@
         //sphereBody.angularVelocity.y=1
         world.addBody(sphereBody);
         demo.addVisual(sphereBody);
-        //sph.add(sphereBody);
+        sph.add(sphereBody);
         // sphereBody.angularVelocity.z = 0
         // sphereBody.velocity.z = 50
         // sphereBody.velocity.x = 50
@@ -141,8 +142,9 @@
               particle.position.set((i + (Math.random()-0.5)*rand + 0.5)*w/nx - w*0.5,
                                     (j + (Math.random()-0.5)*rand + 0.5)*h/ny - h*0.5,
                                     k);
-              particle.velocity.x=-15;
+              particle.velocity.x=speed;
               particle.initYpos=particle.position.y;
+              particle.initZpos=particle.position.z;
 
               world.addBody(particle);
               sph.add(particle);
@@ -178,14 +180,16 @@
             //console.log("got one");
             part.position.x = w/2 -1;
             part.position.y = part.initYpos;
-            part.velocity.x = -15
+            part.position.z = part.initZpos;
+            part.velocity.x = speed
             part.velocity.y = 0
             part.velocity.z = 0
           }
           if(part.position.x >=  w/2 ){
             part.position.y = part.initYpos;
+            part.position.z = part.initZpos;
             part.position.x = w/2 ;
-            part.velocity.x = -15
+            part.velocity.x = speed
             part.velocity.y = 0
             part.velocity.z = 0
           }
